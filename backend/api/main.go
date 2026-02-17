@@ -4,10 +4,12 @@ import (
 	"log"
 	"server/database"
 	_ "server/docs" // Import the generated Swagger docs
+	"server/routes"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/swagger"
+	"github.com/joho/godotenv"
 )
 
 // @title Fiber Golang RestApi
@@ -21,6 +23,11 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by space and the token
 func main() {
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found, using system environment variables")
+	}
 	// Connect to the database
 	database.Connect()
 
@@ -46,7 +53,8 @@ func main() {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Welcome to social app")
 	})
-
+ // setup routes
+   routes.SetupRoutes(app)
 	// Swagger docs route
 	app.Get("/swagger/*", swagger.HandlerDefault) // now it works with docs package
 
