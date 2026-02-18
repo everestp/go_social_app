@@ -105,7 +105,7 @@ func Login(c *fiber.Ctx) error {
 			"deatils": err.Error(),
 		})
 	}
-
+ 
 	var user models.UserModel
 	CheckEmail := UserSchema.FindOne(ctx, bson.D{{Key: "email", Value: body.Email}}).Decode(&user)
 

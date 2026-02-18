@@ -115,6 +115,75 @@ func UpdateUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"data": updateUsser})
 
 }
+
+// DeleteUser
+// @Summary Delete user 
+// @Description Delete user 
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param user body models.UpdateUser true "deatils "
+// @Success 200 {object} models.UserModel
+// @Failure 400 {object} map[string]interface{}
+// @security BearerAuth
+// @Router /user/delete/{id} [delete]
+func DeleteUser(c *fiber.Ctx) error {
+
+	var UserSchema = database.DB.Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	//
+	extUid := c.Locals("userId").(string)
+
+	if extUid != c.Params("id") {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"message": "You Are Not Authroized to Delete This Profile",
+		})
+	}
+	userID , err := primitive.ObjectIDFromHex(c.Params("id"))
+if err != nil{
+	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"message": "Invalid UserID",
+		})
+}
+
+  result ,err := UserSchema.DeleteOne(ctx , bson.M{"_id":userID})
+if err != nil{
+	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Failed to Delete User",
+		})
+}
+	if result.DeletedCount == 0{
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"message": "User not Found",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"success": true,
+			"message": "User Delete Sucessfully",
+		})
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Following User
 // @Summary  Follow/UnFollow User
 // @Description follow/unfollow  User
@@ -205,4 +274,103 @@ func FollowingUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"SecondUser": SecondUser, "FirstUser": FirstUser})
 
+}
+// GetSugUser
+// @Summary  Get Suggested User
+// @Description get suggested user based on the current user's follwoing list
+// @Tags U98sers
+// @Accept json
+// @Produce json
+// @Param id query string true "User ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @security BearerAuth
+// @Router /user/getSug [get]
+func GetSugUser(c *fiber.Ctx) error {
+
+	var UserSchema = database.DB.Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var MainUser models.UserModel
+	var SugListId []string
+	var AllSugUsers []models.UserModel
+
+	MainUserID, err := primitive.ObjectIDFromHex(c.Query("id"))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"deatils": err.Error(),
+		})
+	}
+
+	err = UserSchema.FindOne(ctx, bson.M{"_id": MainUserID}).Decode(&MainUser)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"deatils": err.Error(),
+		})
+	}
+
+	// Get SugUsers id then put them in suglistid
+	for _, FID := range MainUser.Following {
+		var singleUser models.UserModel
+		convFID, _ := primitive.ObjectIDFromHex(FID)
+		err = UserSchema.FindOne(ctx, bson.M{"_id": convFID}).Decode(&singleUser)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"deatils": err.Error(),
+			})
+		}
+
+		// following
+		for _, id := range singleUser.Following {
+			if slices.Contains(SugListId, id) || id != c.Query("id") {
+				SugListId = append(SugListId, id)
+			}
+		}
+
+		// Followers
+		for _, id := range singleUser.Followers {
+			if slices.Contains(SugListId, id) || id != c.Query("id") {
+				SugListId = append(SugListId, id)
+			}
+		}
+
+	}
+
+	// Gest Sug Users by id .
+	if len(SugListId) > 0 {
+
+		var objectides []primitive.ObjectID
+		for _, id := range SugListId {
+			objid, err := primitive.ObjectIDFromHex(id)
+			if err != nil {
+				continue
+			}
+			objectides = append(objectides, objid)
+		}
+
+		// fetch all users in one qeery using $in operator
+		cursor, err := UserSchema.Find(ctx, bson.M{
+			"_id": bson.M{"$in": objectides},
+		})
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"deatils": err.Error(),
+			})
+		}
+
+		defer cursor.Close(ctx)
+
+		if err = cursor.All(ctx, &AllSugUsers); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"deatils": err.Error(),
+			})
+		}
+	}
+
+	if AllSugUsers == nil {
+		AllSugUsers = make([]models.UserModel, 0)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"users": AllSugUsers})
 }
