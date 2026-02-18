@@ -154,4 +154,128 @@ func GetMsgsByNums(c *fiber.Ctx) error {
 
 }
 
+// GetuserUnreadedmessage
+// @Summary Get unreaded message count & recodes for user
+// @Description Get unreaded message count & recodes for user
+// @Tags Chat
+// @Accept json
+// @Produce json
+// @Param userid query string true "user id"
+// @Failure 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /chat/get-user-unreadedmsg [get]
+func GetUserUnreadedMsg(c *fiber.Ctx) error {
+
+	var UnReadedMsgSchema = database.DB.Collection("unReadedmessages")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	userid := c.Query("userid")
+	if userid == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "user id query param is requied!",
+		})
+	}
+	// filter
+	filter := bson.M{"mainUserid": userid, "isReaded": false}
+
+	// query the db
+	cursor, err := UnReadedMsgSchema.Find(ctx, filter)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Faild to retrieve unareded messages",
+			"error":   err.Error(),
+		})
+	}
+	defer cursor.Close(ctx)
+
+	// iterate over the cursor and build the res array
+	var urms []models.UnReadedMsg
+	totalUnreadMessageCount := 0
+
+	for cursor.Next(ctx) {
+		var urm models.UnReadedMsg
+		err := cursor.Decode(&urm)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "Faild to decode unreded message ",
+				"error":   err.Error(),
+			})
+		}
+		if !urm.IsReaded {
+			urms = append(urms, urm)
+		}
+		totalUnreadMessageCount += urm.NumOfUnreadedMessages
+	}
+
+	if len(urms) == 0 {
+		urms = []models.UnReadedMsg{}
+	}
+
+	// Return the created message
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"messages": urms,
+		"total":    totalUnreadMessageCount,
+	})
+
+}
+
+// MarkMsgAsReaded
+// @Summary mark messages as read for user
+// @Description mark messages as read for user uupate the recoded make is read true num 0
+// @Tags Chat
+// @Accept json
+// @Produce json
+// @Param mainuid query string true "main user id"
+// @Param otheruid query string true "ohter user id"
+// @Failure 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /chat/mark-msg-asreaded [get]
+func MarkMsgAsReaded(c *fiber.Ctx) error {
+
+	var UnReadedMsgSchema = database.DB.Collection("unReadedmessages")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	mainuid := c.Query("mainuid")
+	otheruid := c.Query("otheruid")
+	if mainuid == "" || otheruid == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "mainuid and other userid query params is requied!",
+		})
+	}
+	// filter
+	filter := bson.M{"mainUserid": mainuid, "otherUserid": otheruid}
+	update := bson.M{"$set": bson.M{"isReaded": true, "numOfUnreadedMessages": 0}}
+
+	// update the docoument
+	options := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+	result := UnReadedMsgSchema.FindOneAndUpdate(ctx, filter, update, options)
+
+	if result.Err() != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"messages": "Faild to mark message as readed",
+			"error":    result.Err().Error(),
+		})
+
+	}
+
+	// check
+	var updateDoc bson.M
+	if err := result.Decode(&updateDoc); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"messages": "Faild to decode update docoument",
+			"error":    result.Err().Error(),
+		})
+
+	}
+
+	isMarked := updateDoc != nil
+
+	// Return the created message
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isMarked": isMarked,
+	})
+
+}
 

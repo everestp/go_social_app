@@ -131,6 +131,33 @@ info:
   title: Fiber Golang RestApi
   version: "1.0"
 paths:
+  /chat/get-user-unreadedmsg:
+    get:
+      consumes:
+      - application/json
+      description: Get unreaded message count & recodes for user
+      parameters:
+      - description: user id
+        in: query
+        name: userid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get unreaded message count & recodes for user
+      tags:
+      - Chat
   /chat/getmsgsbynums:
     get:
       consumes:
@@ -167,6 +194,39 @@ paths:
             additionalProperties: true
             type: object
       summary: get message by pagenation
+      tags:
+      - Chat
+  /chat/mark-msg-asreaded:
+    get:
+      consumes:
+      - application/json
+      description: mark messages as read for user uupate the recoded make is read
+        true num 0
+      parameters:
+      - description: main user id
+        in: query
+        name: mainuid
+        required: true
+        type: string
+      - description: ohter user id
+        in: query
+        name: otheruid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: mark messages as read for user
       tags:
       - Chat
   /posts:
