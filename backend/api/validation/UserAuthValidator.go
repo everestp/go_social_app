@@ -1,4 +1,4 @@
-package validaton
+package validation
 
 import (
 	"server/models"

@@ -56,6 +56,7 @@ func main() {
  // setup routes
    routes.SetupAuthRoutes(app)
     routes.SetupUserRoutes(app)
+	routes.SetupPostRoutes(app)
 	// Swagger docs route
 	app.Get("/swagger/*", swagger.HandlerDefault) // now it works with docs package
 

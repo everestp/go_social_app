@@ -1,15 +1,15 @@
 package routes
 
 import (
-	"server/validaton"
+	"server/controllers"
+	"server/validation"
 
 	"github.com/gofiber/fiber/v2"
-	"server/controllers"
 )
 
 
 func SetupAuthRoutes(app *fiber.App){
 	//auth
-	app.Post("/user/signup", validaton.ValidateUser, controllers.Register)
-	app.Post("/user/signin", validaton.ValidateUser, controllers.Login)
+	app.Post("/user/signup", validation.ValidateUser, controllers.Register)
+	app.Post("/user/signin", validation.ValidateUser, controllers.Login)
 }
