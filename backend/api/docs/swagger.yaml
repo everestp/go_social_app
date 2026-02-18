@@ -11,6 +11,13 @@ definitions:
       password:
         type: string
     type: object
+  models.LoginUser:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
   models.UserModel:
     properties:
       _id:
@@ -45,6 +52,33 @@ info:
   title: Fiber Golang RestApi
   version: "1.0"
 paths:
+  /user/signin:
+    post:
+      consumes:
+      - application/json
+      description: Register an ew user by providing email, password
+      parameters:
+      - description: user register deatils
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.UserModel'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Login a new user
+      tags:
+      - Authentication
   /user/signup:
     post:
       consumes:
@@ -70,7 +104,7 @@ paths:
           schema:
             additionalProperties: true
             type: object
-      summary: Gegister a new user
+      summary: Register a new user
       tags:
       - Authentication
 securityDefinitions:

@@ -15,6 +15,47 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/user/signin": {
+            "post": {
+                "description": "Register an ew user by providing email, password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login a new user",
+                "parameters": [
+                    {
+                        "description": "user register deatils",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/user/signup": {
             "post": {
                 "description": "Register an ew user by providing email, password , first name , last name",
@@ -27,7 +68,7 @@ const docTemplate = `{
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Gegister a new user",
+                "summary": "Register a new user",
                 "parameters": [
                     {
                         "description": "user register deatils",
@@ -68,6 +109,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "lastName": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.LoginUser": {
+            "type": "object",
+            "properties": {
+                "email": {
                     "type": "string"
                 },
                 "password": {
