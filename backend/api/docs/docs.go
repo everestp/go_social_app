@@ -15,9 +15,48 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/user/getUser/{id}": {
+            "get": {
+                "description": "Get User Detail By ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get User By ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/user/signin": {
             "post": {
-                "description": "Register an ew user by providing email, password",
+                "description": "Login an user by providing email, password",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,10 +66,10 @@ const docTemplate = `{
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Login a new user",
+                "summary": "login a  user",
                 "parameters": [
                     {
-                        "description": "user register deatils",
+                        "description": "user Login deatils",
                         "name": "user",
                         "in": "body",
                         "required": true,
@@ -68,7 +107,7 @@ const docTemplate = `{
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Register a new user",
+                "summary": "Gegister a new user",
                 "parameters": [
                     {
                         "description": "user register deatils",

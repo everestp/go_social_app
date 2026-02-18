@@ -54,7 +54,8 @@ func main() {
 		return c.SendString("Welcome to social app")
 	})
  // setup routes
-   routes.SetupRoutes(app)
+   routes.SetupAuthRoutes(app)
+    routes.SetupUserRoutes(app)
 	// Swagger docs route
 	app.Get("/swagger/*", swagger.HandlerDefault) // now it works with docs package
 

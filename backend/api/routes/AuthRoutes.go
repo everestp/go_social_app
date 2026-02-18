@@ -8,7 +8,7 @@ import (
 )
 
 
-func SetupRoutes(app *fiber.App){
+func SetupAuthRoutes(app *fiber.App){
 	//auth
 	app.Post("/user/signup", validaton.ValidateUser, controllers.Register)
 	app.Post("/user/signin", validaton.ValidateUser, controllers.Login)
