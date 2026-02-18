@@ -11,5 +11,6 @@ import (
 func SetupChatRoutes(app *fiber.App){
 	//auth
 	app.Post("/chat/sendmessage", controllers.SendMessage)
+	app.Get("/chat/getmsgsbynums", controllers.GetMsgsByNums)
 
 }

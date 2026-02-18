@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/chat/sendmessage": {
-            "post": {
-                "description": "Sendmessage from one user to another",
+        "/chat/getmsgsbynums": {
+            "get": {
+                "description": "GetMsgsByNumbetween two users by pagenation",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,25 +25,40 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Authentication"
+                    "Chat"
                 ],
-                "summary": "Send Message To friend",
+                "summary": "get message by pagenation",
                 "parameters": [
                     {
-                        "description": "use SendMessages",
-                        "name": "message",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.SendMessageM"
-                        }
+                        "type": "integer",
+                        "description": "Staring point page num",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "first user id",
+                        "name": "firstuid",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "second user id",
+                        "name": "seconduid",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Message"
+                            }
                         }
                     },
                     "400": {
@@ -549,7 +564,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "U98sers"
+                    "Users"
                 ],
                 "summary": "Get Suggested User",
                 "parameters": [
@@ -814,7 +829,7 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
-                "recever": {
+                "receiver": {
                     "type": "string"
                 },
                 "sender": {
