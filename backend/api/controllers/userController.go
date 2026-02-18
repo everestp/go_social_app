@@ -278,7 +278,7 @@ func FollowingUser(c *fiber.Ctx) error {
 // GetSugUser
 // @Summary  Get Suggested User
 // @Description get suggested user based on the current user's follwoing list
-// @Tags U98sers
+// @Tags Users
 // @Accept json
 // @Produce json
 // @Param id query string true "User ID"
