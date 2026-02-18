@@ -14,4 +14,7 @@ func SetupUserRoutes(app *fiber.App){
 
 	//Update
 	app.Patch("/user/Update/:id", middleware.AuthMiddleware , controllers.UpdateUser)
+	//following
+	app.Patch("/user/:id/follow", middleware.AuthMiddleware , controllers.FollowingUser)
+
 }

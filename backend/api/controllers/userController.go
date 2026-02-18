@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"server/database"
 	"server/models"
+	"slices"
+	"sort"
 	"time"
-
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	
 )
 
 // GetUserBy ID
@@ -113,5 +113,96 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"data": updateUsser})
+
+}
+// Following User
+// @Summary  Follow/UnFollow User
+// @Description follow/unfollow  User
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @security BearerAuth
+// @Router /user/{id}/following [patch]
+func FollowingUser(c *fiber.Ctx) error {
+
+	var UserSchema = database.DB.Collection("users")
+	// var NotificationSchema = database.DB.Collection("notifications")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var FirstUser models.UserModel
+	var SecondUser models.UserModel
+
+	FirstUserID, _ := primitive.ObjectIDFromHex(c.Params("id"))
+	SecondUserID, _ := primitive.ObjectIDFromHex(c.Locals("userId").(string))
+
+	err := UserSchema.FindOne(ctx, bson.M{"_id": FirstUserID}).Decode(&FirstUser)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"deatils": err.Error(),
+		})
+	}
+
+	err = UserSchema.FindOne(ctx, bson.M{"_id": SecondUserID}).Decode(&SecondUser)
+
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"deatils": err.Error(),
+		})
+	}
+
+	fuid := c.Params("id")
+	suid := c.Locals("userId").(string)
+
+	if slices.Contains(FirstUser.Followers, suid) {
+		i := sort.SearchStrings(FirstUser.Followers, suid)
+		FirstUser.Followers = slices.Delete(FirstUser.Followers, i, i+1)
+		// remove form the following list on second user
+		index := sort.SearchStrings(SecondUser.Following, fuid)
+		SecondUser.Following = slices.Delete(SecondUser.Following, index, index+1)
+	} else {
+		FirstUser.Followers = append(FirstUser.Followers, suid)
+		SecondUser.Following = append(SecondUser.Following, fuid)
+
+		// Create Notification
+		//TODO :Notification
+	}
+
+	updateFirst := bson.M{"followers": FirstUser.Followers}
+	updateSecond := bson.M{"following": SecondUser.Following}
+
+	_, err = UserSchema.UpdateOne(ctx, bson.M{"_id": FirstUserID}, bson.M{"$set": updateFirst})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"deatils": err.Error(),
+		})
+	}
+	_, err = UserSchema.UpdateOne(ctx, bson.M{"_id": SecondUserID}, bson.M{"$set": updateSecond})
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"deatils": err.Error(),
+		})
+	}
+
+	err = UserSchema.FindOne(ctx, bson.M{"_id": FirstUserID}).Decode(&FirstUser)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"deatils": err.Error(),
+		})
+	}
+
+	err = UserSchema.FindOne(ctx, bson.M{"_id": SecondUserID}).Decode(&SecondUser)
+
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"deatils": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"SecondUser": SecondUser, "FirstUser": FirstUser})
 
 }
