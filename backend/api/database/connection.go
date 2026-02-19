@@ -3,6 +3,8 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,15 +15,32 @@ var Client *mongo.Client
 var DB *mongo.Database
 
 func Connect() {
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	mongoUri := "mongodb://localhost:27017"
-	Client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUri))
-
-	if err == nil {
-		fmt.Println("connection to DB..")
-		DB = Client.Database("social")
-	} else {
-		fmt.Printf("error connect to db:%s\n", err.Error())
+	mongoURI := os.Getenv("MONGODB_URL")
+	if mongoURI == "" {
+		log.Fatal("❌ MONGODB_URL not set in environment")
 	}
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
+	if err != nil {
+		log.Fatalf("❌ Failed to create Mongo client: %v", err)
+	}
+
+	// Ping database to verify connection
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatalf("❌ Failed to connect to MongoDB (Ping failed): %v", err)
+	}
+
+	fmt.Println("✅ Successfully connected to MongoDB!")
+
+	// Assign global variables only after successful ping
+	Client = client
+	DB = client.Database("social")
+
+	fmt.Println("📦 Database selected: social")
 }

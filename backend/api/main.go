@@ -54,5 +54,5 @@ func main() {
 	// Serve swager doctionation
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
-	app.Listen(":5000")
+	app.Listen(":5001")
 }
