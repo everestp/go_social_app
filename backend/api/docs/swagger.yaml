@@ -44,7 +44,7 @@ definitions:
         type: string
       content:
         type: string
-      receiver:
+      recever:
         type: string
       sender:
         type: string
@@ -127,8 +127,8 @@ definitions:
 host: localhost:5000
 info:
   contact: {}
-  description: This is the Swagger docs for REST API Golang Fiber
-  title: Fiber Golang RestApi
+  description: This is Swagger docs for rest api golang fiber
+  title: Fiber Golang Mongo Grpc Websocet etc..
   version: "1.0"
 paths:
   /chat/get-user-unreadedmsg:
@@ -229,6 +229,87 @@ paths:
       summary: mark messages as read for user
       tags:
       - Chat
+  /chat/sendmessage:
+    post:
+      consumes:
+      - application/json
+      description: SendMessage form one user to another
+      parameters:
+      - description: user SendMessage deatils
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/models.SendMessageM'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: send message to friend user
+      tags:
+      - Chat
+  /notification/{userid}:
+    get:
+      consumes:
+      - application/json
+      description: GetUserNotification
+      parameters:
+      - description: User ID
+        in: path
+        name: userid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get user notifications
+      tags:
+      - Notifications
+  /notification/mark-notification-asreaded:
+    get:
+      consumes:
+      - application/json
+      description: MarkNotAsReaded
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Mark Notfication AsReaded  for a user
+      tags:
+      - Notifications
   /posts:
     get:
       consumes:
@@ -473,7 +554,7 @@ paths:
     patch:
       consumes:
       - application/json
-      description: follow/unfollow  User
+      description: follow or  un follow a user
       parameters:
       - description: User ID
         in: path
@@ -536,26 +617,21 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Delete user
+      description: delete user
       parameters:
       - description: User ID
         in: path
         name: id
         required: true
         type: string
-      - description: 'deatils '
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.UpdateUser'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.UserModel'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -563,14 +639,14 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Delete user
+      summary: delete user
       tags:
       - Users
   /user/getSug:
     get:
       consumes:
       - application/json
-      description: get suggested user based on the current user's follwoing list
+      description: get suggested userses based on the current user's following list
       parameters:
       - description: User ID
         in: query
@@ -592,14 +668,14 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get Suggested User
+      summary: Get Suggersted users
       tags:
       - Users
   /user/getUser/{id}:
     get:
       consumes:
       - application/json
-      description: Get User Detail By ID
+      description: GetUser Deatils By ID
       parameters:
       - description: User ID
         in: path
@@ -676,9 +752,11 @@ paths:
       summary: Gegister a new user
       tags:
       - Authentication
+schemes:
+- http
 securityDefinitions:
   BearerAuth:
-    description: Type "Bearer" followed by space and the token
+    description: Type "Bearer" followed by a space and the token
     in: header
     name: Authorization
     type: apiKey

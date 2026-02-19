@@ -8,7 +8,7 @@ type Message struct {
 	ID      primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Content string             `json:"content" bson:"content"`
 	Sender  string             `json:"sender" bson:"sender"`
-	Receiver string             `json:"receiver" bson:"receiver"`
+	Recever string             `json:"recever" bson:"recever"`
 }
 
 // interfaces

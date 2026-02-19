@@ -1,36 +1,35 @@
 <template>
-  <q-header class="bg-white text-grey-9" bordered>
-    <q-toolbar class="constrain">
+  <q-header class="bg-white text-grey-10">
+    <q-toolbar class="constrain x">
 
-      <!-- Logo / Home -->
-      <q-btn flat to="/" class="q-px-md">
-        <q-icon name="eva-home-outline" size="28px" class="q-mr-sm" />
-        <q-toolbar-title class="text-bold text-h6">
+      <!-- Home Button -->
+      <q-btn flat to="/">
+        <q-icon left size="3em" name="eva-camera-outline" />
+        <q-toolbar-title class="text grand-hotel text-bold">
           Home
         </q-toolbar-title>
       </q-btn>
 
-      <q-space />
+      <q-separator class="large-screen-only" vertical spaced />
 
       <!-- Search -->
-      <q-input
-        dense
-        outlined
-        rounded
-        placeholder="Search..."
-        class="search-input"
-        @keyup.enter="GoSearch"
+      <q-toolbar-title class="text-center">
+        <q-input
+          v-model="searchText"
+          bottom-slots
+          class="nuks"
+          label="Search"
+          @keyup.enter="GoSearch"
+        />
+      </q-toolbar-title>
+
+      <!-- Chat Button -->
+      <q-btn
+        round
+        @click="GoToChat"
+        :icon="unReadedMessages > 0 ? 'eva-message-square-outline' : 'eva-message-square'"
+        :color="unReadedMessages > 0 ? 'primary' : 'dark'"
       >
-        <template v-slot:prepend>
-          <q-icon name="eva-search-outline" />
-        </template>
-      </q-input>
-
-      <q-space />
-
-      <!-- Messages -->
-      <q-btn round flat>
-        <q-icon name="eva-message-circle-outline" size="24px" />
         <q-badge
           v-if="unReadedMessages > 0"
           color="negative"
@@ -40,40 +39,42 @@
         />
       </q-btn>
 
-      <!-- Notifications -->
-      <q-btn round flat>
-        <q-icon name="eva-bell-outline" size="24px" />
+      <!-- Notification Button -->
+      <q-btn
+        round
+        @click="GoToNotification"
+        :icon="notificationNum > 0 ? 'eva-bell-outline' : 'eva-bell'"
+        :color="notificationNum > 0 ? 'primary' : 'dark'"
+      >
         <q-badge
           v-if="notificationNum > 0"
-          color="negative"
           floating
+          color="negative"
           rounded
           :label="notificationNum"
         />
       </q-btn>
 
-      <!-- Profile -->
-      <q-btn round flat>
-        <q-avatar size="36px">
+      <!-- User Avatar -->
+      <q-btn round>
+        <q-avatar size="42px">
           <img src="https://cdn-icons-png.flaticon.com/512/3237/3237472.png" />
         </q-avatar>
 
         <q-menu>
-          <q-list style="min-width: 150px">
+          <q-list style="min-width: 100px">
             <q-item clickable v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="eva-person-outline" />
+              <q-item-section @click="Profile">
+                Profile
               </q-item-section>
-              <q-item-section>Profile</q-item-section>
             </q-item>
 
             <q-separator />
 
             <q-item clickable v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="eva-log-out-outline" />
+              <q-item-section @click="LogUserOut">
+                Logout
               </q-item-section>
-              <q-item-section>Logout</q-item-section>
             </q-item>
           </q-list>
         </q-menu>
@@ -86,28 +87,54 @@
 <script>
 export default {
   name: 'NavBar',
-  props: {
-    unReadedMessages: {
-      type: Number,
-      default: 0
-    },
-    notificationNum: {
-      type: Number,
-      default: 0
+
+  data() {
+    return {
+      searchText: '',
+      notificationNum: 2,      // Static demo number
+      unReadedMessages: 3      // Static demo number
     }
   },
+
   methods: {
-    GoSearch () {
-      console.log('Search triggered')
+    GoSearch() {
+      console.log("Search:", this.searchText)
+      this.$router.push({
+        path: `/Search`,
+        query: { search: this.searchText }
+      })
+    },
+
+    Profile() {
+      this.$router.push(`/Profile/demo-user`)
+    },
+
+    LogUserOut() {
+      console.log("Logged out (frontend only)")
+      this.$router.push(`/Auth`)
+    },
+
+    GoToNotification() {
+      this.$router.push('/Notification')
+    },
+
+    GoToChat() {
+      this.$router.push('/Chat')
     }
   }
 }
 </script>
 
 <style lang="sass">
-.search-input
-  width: 280px
+.nuks 
+  width: 250px
+  text-align: center
+  display: inline-block !important
 
-.q-btn
-  margin-left: 8px
+.q-toolbar-title
+  display: flex 
+  align-items: center 
+
+.q-btn 
+  margin-left: 10px
 </style>

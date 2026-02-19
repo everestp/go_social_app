@@ -1,11 +1,10 @@
 package controllers
 
 import (
+	"Server/database"
+	"Server/models"
 	"context"
 	"strconv"
-
-	"server/database"
-	"server/models"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,6 +22,7 @@ import (
 // @Param message body models.SendMessageM true "user SendMessage deatils"
 // @Success 201 {object} models.Message
 // @Failure 400 {object} map[string]interface{}
+// @Router /chat/sendmessage [post]
 func SendMessage(c *fiber.Ctx) error {
 
 	var MessageSchema = database.DB.Collection("messages")
@@ -38,38 +38,36 @@ func SendMessage(c *fiber.Ctx) error {
 		})
 	}
 
-  var msg models.Message
-  c.BodyParser(&msg)
-
-  // save the message to db
-  result , err := MessageSchema.InsertOne(ctx, &msg)
-  if  err != nil {
+	var msg models.Message
+	c.BodyParser(&msg)
+	// save the message to db
+	result, err := MessageSchema.InsertOne(ctx, &msg)
+	if err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
-			"error":   "I failed to save message",
+			"error":   "faild to save msg",
 			"deatils": err.Error(),
 		})
 	}
 
-	//update or create the unreaded messages count and is readed
-	var unReadedMsg models.UnReadedMsg
-	filter := bson.M{"mainUserId":msg.Receiver ,"otherUserId":msg.Sender}
-	update := bson.M{"$inc":bson.M{"numOfUnreadedMessages":1},"$set":bson.M{"isReaded":false}}
+	// update or create the unreaded message count and is readed
+	var unRreadedMsg models.UnReadedMsg
+	filtter := bson.M{"mainUserid": msg.Recever, "otherUserid": msg.Sender}
+	update := bson.M{"$inc": bson.M{"numOfUnreadedMessages": 1}, "$set": bson.M{"isReaded": false}}
 	opts := options.FindOneAndUpdate().SetUpsert(true)
-	err = UnReadedMsgSchema.FindOneAndUpdate(ctx ,filter ,update,opts).Decode(&unReadedMsg)
-	if err !=nil && err != mongo.ErrNoDocuments{
+	err = UnReadedMsgSchema.FindOneAndUpdate(ctx, filtter, update, opts).Decode(&unRreadedMsg)
+	if err != nil && err != mongo.ErrNoDocuments {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
-			"error":   "Failed to update unreaded  message count",
+			"message": "Faild to update unareded message count",
 			"deatils": err.Error(),
 		})
-
 	}
 
-     
-    // return the created message
+	// Return the created message
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message":"Message send Sucessfully",
-		"result":result.InsertedID,
+		"message": "Message sent Successfully",
+		"result":  result.InsertedID,
 	})
+
 }
 
 // GetMsgsByNums
@@ -278,4 +276,3 @@ func MarkMsgAsReaded(c *fiber.Ctx) error {
 	})
 
 }
-

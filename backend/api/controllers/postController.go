@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"server/database"
-	"server/models"
+	"Server/database"
+	"Server/models"
 	"context"
 	"math"
 	"slices"
@@ -27,7 +27,7 @@ import (
 // @Failure 400 {object} map[string]interface{}
 // @Security BearerAuth
 // @Router /posts [post]
-func CreatePost(c *fiber.Ctx) error {
+func CraetePost(c *fiber.Ctx) error {
 
 	var UserSchema = database.DB.Collection("users")
 	var PostSchema = database.DB.Collection("posts")

@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"server/database"
-	"server/models"
+	"Server/database"
+	"Server/models"
 	"context"
 	"time"
 

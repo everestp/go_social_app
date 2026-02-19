@@ -1,7 +1,7 @@
 package validation
 
 import (
-	"server/models"
+	"Server/models"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -29,5 +29,4 @@ func ValidateUser(c *fiber.Ctx) error {
 	}
 	// ok
 	return c.Next()
-	
 }

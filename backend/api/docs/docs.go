@@ -158,6 +158,127 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/sendmessage": {
+            "post": {
+                "description": "SendMessage form one user to another",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "send message to friend user",
+                "parameters": [
+                    {
+                        "description": "user SendMessage deatils",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.SendMessageM"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/notification/mark-notification-asreaded": {
+            "get": {
+                "description": "MarkNotAsReaded",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark Notfication AsReaded  for a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/notification/{userid}": {
+            "get": {
+                "description": "GetUserNotification",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get user notifications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/posts": {
             "get": {
                 "security": [
@@ -590,7 +711,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Delete user",
+                "description": "delete user",
                 "consumes": [
                     "application/json"
                 ],
@@ -600,7 +721,7 @@ const docTemplate = `{
                 "tags": [
                     "Users"
                 ],
-                "summary": "Delete user",
+                "summary": "delete user",
                 "parameters": [
                     {
                         "type": "string",
@@ -608,22 +729,14 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "deatils ",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.UpdateUser"
-                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.UserModel"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
@@ -643,7 +756,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "get suggested user based on the current user's follwoing list",
+                "description": "get suggested userses based on the current user's following list",
                 "consumes": [
                     "application/json"
                 ],
@@ -653,7 +766,7 @@ const docTemplate = `{
                 "tags": [
                     "Users"
                 ],
-                "summary": "Get Suggested User",
+                "summary": "Get Suggersted users",
                 "parameters": [
                     {
                         "type": "string",
@@ -683,7 +796,7 @@ const docTemplate = `{
         },
         "/user/getUser/{id}": {
             "get": {
-                "description": "Get User Detail By ID",
+                "description": "GetUser Deatils By ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -809,7 +922,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "follow/unfollow  User",
+                "description": "follow or  un follow a user",
                 "consumes": [
                     "application/json"
                 ],
@@ -916,7 +1029,7 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
-                "receiver": {
+                "recever": {
                     "type": "string"
                 },
                 "sender": {
@@ -1039,7 +1152,7 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "BearerAuth": {
-            "description": "Type \"Bearer\" followed by space and the token",
+            "description": "Type \"Bearer\" followed by a space and the token",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
@@ -1052,9 +1165,9 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:5000",
 	BasePath:         "/",
-	Schemes:          []string{},
-	Title:            "Fiber Golang RestApi",
-	Description:      "This is the Swagger docs for REST API Golang Fiber",
+	Schemes:          []string{"http"},
+	Title:            "Fiber Golang Mongo Grpc Websocet etc..",
+	Description:      "This is Swagger docs for rest api golang fiber",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

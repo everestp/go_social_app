@@ -4,16 +4,16 @@ import (
 	// "Server/controllers"
 	// "Server/validation"
 
-	"server/controllers"
-	"server/middleware"
-	"server/validation"
+	"Server/controllers"
+	"Server/middleware"
+	"Server/validation"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func SetupPostRoutes(app *fiber.App) {
 	// create
-	app.Post("/posts", middleware.AuthMiddleware, validation.ValidatePost, controllers.CreatePost)
+	app.Post("/posts", middleware.AuthMiddleware, validation.ValidatePost, controllers.CraetePost)
 	// getall
 	app.Get("/posts", controllers.GetAllPosts)
 	// search

@@ -1,10 +1,9 @@
 package controllers
 
 import (
+	"Server/database"
+	"Server/models"
 	"context"
-	"fmt"
-	"server/database"
-	"server/models"
 	"slices"
 	"sort"
 	"time"
@@ -17,11 +16,11 @@ import (
 
 // GetUserBy ID
 // @Summary Get User By ID
-// @Description Get User Detail By ID
-// @Tags  Users
+// @Description GetUser Deatils By ID
+// @Tags Users
 // @Accept json
 // @Produce json
-// @Param   id path string true "User ID"
+// @Param id path string true "User ID"
 // @Success 201 {object} models.UserModel
 // @Failure 400 {object} map[string]interface{}
 // @Router /user/getUser/{id} [get]
@@ -33,44 +32,44 @@ func GetUserByID(c *fiber.Ctx) error {
 	defer cancel()
 
 	var user models.UserModel
-	 var posts []models.PostModel
+	var posts []models.PostModel
 
-
-	objID, _ :=  primitive.ObjectIDFromHex(c.Params("id"))
-	strID :=c.Params("id")
-	fmt.Println(strID)
-	//TODO GET and Return user posts
+	objId, _ := primitive.ObjectIDFromHex(c.Params("id"))
+	strID := c.Params("id")
+	// GET and REturn user posts
 	findOptions := options.Find()
-	postResult , err := PostSchema.Find(ctx , bson.M{"creator":strID},findOptions)
-if  err != nil{
-			return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
-			"sucess":   false,
-			"error":err,
+	postResult, err := PostSchema.Find(ctx, bson.M{"creator": strID}, findOptions)
+	if err != nil {
+		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+			"error": err,
 		})
 	}
+
 	defer postResult.Close(ctx)
-	for postResult.Next(ctx){
+	for postResult.Next(ctx) {
 		var singlePost models.PostModel
 		postResult.Decode(&singlePost)
 		posts = append(posts, singlePost)
 	}
 
-	if  posts == nil{
+	if posts == nil {
 		posts = make([]models.PostModel, 0)
 	}
-	//get user data
-	userResult := UserSchema.FindOne(ctx , bson.M{"_id":objID})
-	if userResult.Err() != nil{
-			return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
-			"sucess":   false,
-			"message": "user not found",
+	// get nuser data
+	userResult := UserSchema.FindOne(ctx, bson.M{"_id": objId})
+
+	if userResult.Err() != nil {
+		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+			"success": false,
+			"message": "User Not found",
 		})
 	}
- userResult.Decode(&user)
-	
+
+	userResult.Decode(&user)
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"result": user,
-		"post":  posts,
+		"user":  user,
+		"posts": posts,
 	})
 }
 
@@ -137,77 +136,9 @@ func UpdateUser(c *fiber.Ctx) error {
 
 }
 
-// DeleteUser
-// @Summary Delete user 
-// @Description Delete user 
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param id path string true "User ID"
-// @Param user body models.UpdateUser true "deatils "
-// @Success 200 {object} models.UserModel
-// @Failure 400 {object} map[string]interface{}
-// @security BearerAuth
-// @Router /user/delete/{id} [delete]
-func DeleteUser(c *fiber.Ctx) error {
-
-	var UserSchema = database.DB.Collection("users")
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	//
-	extUid := c.Locals("userId").(string)
-
-	if extUid != c.Params("id") {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"success": false,
-			"message": "You Are Not Authroized to Delete This Profile",
-		})
-	}
-	userID , err := primitive.ObjectIDFromHex(c.Params("id"))
-if err != nil{
-	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"success": false,
-			"message": "Invalid UserID",
-		})
-}
-
-  result ,err := UserSchema.DeleteOne(ctx , bson.M{"_id":userID})
-if err != nil{
-	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"success": false,
-			"message": "Failed to Delete User",
-		})
-}
-	if result.DeletedCount == 0{
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"success": false,
-			"message": "User not Found",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"success": true,
-			"message": "User Delete Sucessfully",
-		})
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Following User
-// @Summary  Follow/UnFollow User
-// @Description follow/unfollow  User
+// Following Users
+// @Summary Follow/UnFollow User
+// @Description follow or  un follow a user
 // @Tags Users
 // @Accept json
 // @Produce json
@@ -259,21 +190,19 @@ func FollowingUser(c *fiber.Ctx) error {
 
 		// Create Notification
 		notification := models.Notification{
-			MainUID: FirstUser.ID.Hex(),
-			TargetID: SecondUser.ID.Hex(),
-			Deatils: SecondUser.Name + "Start Following You!",
-			User: models.User{Name: SecondUser.Name, Avatart: SecondUser.ImageUrl},
+			MainUID:   FirstUser.ID.Hex(),
+			TargetID:  SecondUser.ID.Hex(),
+			Deatils:   SecondUser.Name + " Start Following You!",
+			User:      models.User{Name: SecondUser.Name, Avatart: SecondUser.ImageUrl},
 			CreatedAt: time.Now(),
 		}
-
-		_ , err := NotificationSchema.InsertOne(ctx , notification)
+		_, err := NotificationSchema.InsertOne(ctx, notification)
 		if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"message":"Failed to create  notification",
-			"error": err.Error(),
-		})
-	}
-
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "Faild to create notification",
+				"error":   err.Error(),
+			})
+		}
 	}
 
 	updateFirst := bson.M{"followers": FirstUser.Followers}
@@ -311,9 +240,10 @@ func FollowingUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"SecondUser": SecondUser, "FirstUser": FirstUser})
 
 }
-// GetSugUser
-// @Summary  Get Suggested User
-// @Description get suggested user based on the current user's follwoing list
+
+// GetSugUser Users
+// @Summary Get Suggersted users
+// @Description get suggested userses based on the current user's following list
 // @Tags Users
 // @Accept json
 // @Produce json
@@ -409,4 +339,62 @@ func GetSugUser(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"users": AllSugUsers})
+}
+
+// DeleteUser
+// @Summary delete user
+// @Description delete user
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object}  map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @security BearerAuth
+// @Router /user/delete/{id} [delete]
+func DeleteUser(c *fiber.Ctx) error {
+	var UserSchema = database.DB.Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	//
+	extUid := c.Locals("userId").(string)
+
+	if extUid != c.Params("id") {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"message": "You Are Not Authroized to Delete This User",
+		})
+	}
+
+	userID, err := primitive.ObjectIDFromHex(c.Params("id"))
+
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"message": "Invalid User id",
+		})
+	}
+
+	result, err := UserSchema.DeleteOne(ctx, bson.M{"_id": userID})
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "faild to delete user",
+			"error":   err.Error(),
+		})
+	}
+
+	if result.DeletedCount == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"message": "user not found",
+		})
+	}
+	// sucuss
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success": true,
+		"message": "User Deleted Successfully!",
+	})
 }
