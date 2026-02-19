@@ -10,8 +10,15 @@
 
 <script>
 import NavBar from "@/views/NavBar.vue";
+import { mapMutations } from "vuex";
 export default {
   name: "MainLayout",
+  methods:{
+    ...mapMutations(['SetData'])
+  },
+  mounted(){
+    this.SetData();
+  },
   components:{NavBar}
 }
 </script>
