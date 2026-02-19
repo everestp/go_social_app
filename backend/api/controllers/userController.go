@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // GetUserBy ID
@@ -27,16 +28,36 @@ import (
 func GetUserByID(c *fiber.Ctx) error {
 
 	var UserSchema = database.DB.Collection("users")
+	var PostSchema = database.DB.Collection("posts")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	var user models.UserModel
+	 var posts []models.PostModel
+
 
 	objID, _ :=  primitive.ObjectIDFromHex(c.Params("id"))
 	strID :=c.Params("id")
 	fmt.Println(strID)
 	//TODO GET and Return user posts
+	findOptions := options.Find()
+	postResult , err := PostSchema.Find(ctx , bson.M{"creator":strID},findOptions)
+if  err != nil{
+			return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+			"sucess":   false,
+			"error":err,
+		})
+	}
+	defer postResult.Close(ctx)
+	for postResult.Next(ctx){
+		var singlePost models.PostModel
+		postResult.Decode(&singlePost)
+		posts = append(posts, singlePost)
+	}
 
+	if  posts == nil{
+		posts = make([]models.PostModel, 0)
+	}
 	//get user data
 	userResult := UserSchema.FindOne(ctx , bson.M{"_id":objID})
 	if userResult.Err() != nil{
@@ -49,7 +70,7 @@ func GetUserByID(c *fiber.Ctx) error {
 	
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"result": user,
-		"post":  []string{},
+		"post":  posts,
 	})
 }
 
@@ -198,7 +219,7 @@ if err != nil{
 func FollowingUser(c *fiber.Ctx) error {
 
 	var UserSchema = database.DB.Collection("users")
-	// var NotificationSchema = database.DB.Collection("notifications")
+	var NotificationSchema = database.DB.Collection("notifications")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -237,7 +258,22 @@ func FollowingUser(c *fiber.Ctx) error {
 		SecondUser.Following = append(SecondUser.Following, fuid)
 
 		// Create Notification
-		//TODO :Notification
+		notification := models.Notification{
+			MainUID: FirstUser.ID.Hex(),
+			TargetID: SecondUser.ID.Hex(),
+			Deatils: SecondUser.Name + "Start Following You!",
+			User: models.User{Name: SecondUser.Name, Avatart: SecondUser.ImageUrl},
+			CreatedAt: time.Now(),
+		}
+
+		_ , err := NotificationSchema.InsertOne(ctx , notification)
+		if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message":"Failed to create  notification",
+			"error": err.Error(),
+		})
+	}
+
 	}
 
 	updateFirst := bson.M{"followers": FirstUser.Followers}

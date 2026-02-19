@@ -376,6 +376,7 @@ func CommentPost(c *fiber.Ctx) error {
 
 	var PostSchema = database.DB.Collection("posts")
 	var UserSchema = database.DB.Collection("users")
+	var NotificationSchema = database.DB.Collection("notifications")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -431,8 +432,20 @@ func CommentPost(c *fiber.Ctx) error {
 
 	userResult.Decode(&user)
 	// Create Notification
-
-	
+	notification := models.Notification{
+		MainUID:   post.Creator,
+		TargetID:  postid.Hex(),
+		Deatils:   user.Name + " Commented on your Post",
+		User:      models.User{Name: user.Name, Avatart: user.ImageUrl},
+		CreatedAt: time.Now(),
+	}
+	_, err = NotificationSchema.InsertOne(ctx, notification)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Faild to create notification",
+			"error":   err.Error(),
+		})
+	}
 	// end
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"data": post,
@@ -455,7 +468,7 @@ func LikePost(c *fiber.Ctx) error {
 
 	var PostSchema = database.DB.Collection("posts")
 	var UserSchema = database.DB.Collection("users")
-	
+	var NotificationSchema = database.DB.Collection("notifications")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -502,8 +515,21 @@ func LikePost(c *fiber.Ctx) error {
 
 		userResult.Decode(&user)
 		// Create Notification
-	
-		
+		notification := models.Notification{
+			MainUID:   post.Creator,
+			TargetID:  post.ID.Hex(),
+			Deatils:   user.Name + " Liked your Post",
+			User:      models.User{Name: user.Name, Avatart: user.ImageUrl},
+			CreatedAt: time.Now(),
+		}
+		_, err = NotificationSchema.InsertOne(ctx, notification)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "Faild to create notification",
+				"error":   err.Error(),
+			})
+		}
+		// End create notfication
 	}
 
 	// update post
